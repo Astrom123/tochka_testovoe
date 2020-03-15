@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  db:
+    image: postgres
+    restart: on-failure:3
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    restart: on-failure:3
+  web:
+    build: .
+    command: bash -c "python /code/manage.py migrate --noinput && python /code/manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/code
+    expose:
+      - 8000
+    depends_on:
+      - db
+      - celery
+    restart: on-failure:3
+  celery:
+    build: .
+    command: celery -A tochka_task worker -l info
+    volumes:
+      - .:/code
+    depends_on:
+      - celery-beat
+      - redis
+    restart: on-failure:3
+  celery-beat:
+    build: .
+    command: celery -A tochka_task beat -l info
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+      - redis
+    restart: on-failure:3
+  nginx:
+    build: ./nginx
+    ports:
+      - 80:80
+    depends_on:
+      - web
+    restart: on-failure:3
