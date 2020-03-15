@@ -49,24 +49,26 @@ class ViewsTestCase(TestCase):
 
     def test_add(self):
         user = self.users[0]
+        money = 200
         old_balance = user.balance
         body = json.dumps({"addition": {"uuid": user.uuid,
-                                        "addition": 200}})
+                                        "money": money}})
         json_response = self.send_request(user, add, body)
 
         self.assertEqual(json_response['status'], "200 OK")
         self.assertTrue(json_response['result'])
         self.assertEqual(json_response['addition']['balance'], user.balance)
-        self.assertEqual(old_balance + 200, user.balance)
+        self.assertEqual(old_balance + money, user.balance)
 
     def test_sub(self):
         user = self.users[0]
+        money = 200
         old_holds = user.holds
         body = json.dumps({"addition": {"uuid": user.uuid,
-                                        "subtraction": 200}})
+                                        "money": money}})
         json_response = self.send_request(user, subtract, body)
 
         self.assertEqual(json_response['status'], "200 OK")
         self.assertTrue(json_response['result'])
         self.assertEqual(json_response['addition']['balance'], user.balance)
-        self.assertEqual(old_holds + 200, user.holds)
+        self.assertEqual(old_holds + money, user.holds)

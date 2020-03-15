@@ -6,13 +6,13 @@ from subscribers.serializers import SubscriberSerializer
 
 def add(request):
     user, params = parse_request(request)
-    result = user.add(params['addition'])
+    result = user.add(params['money'])
     return get_response(user, result)
 
 
 def subtract(request):
     user, params = parse_request(request)
-    result = user.subtract(params['subtraction'])
+    result = user.subtract(params['money'])
     return get_response(user, result)
 
 
