@@ -1,9 +1,6 @@
 version: '3'
 
 services:
-  db:
-    image: postgres
-    restart: on-failure:3
   redis:
     image: redis:latest
     ports:
@@ -17,7 +14,6 @@ services:
     expose:
       - 8000
     depends_on:
-      - db
       - celery
     restart: on-failure:3
   celery:
@@ -35,7 +31,6 @@ services:
     volumes:
       - .:/code
     depends_on:
-      - db
       - redis
     restart: on-failure:3
   nginx:
