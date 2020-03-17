@@ -1,6 +1,7 @@
 from django.test import TestCase, RequestFactory
 from subscribers.models import Subscriber
 from subscribers.views import *
+import uuid
 import json
 
 
@@ -24,11 +25,10 @@ class ViewsTestCase(TestCase):
                                                     uuid="867f0924-a917-4711-939b90b179a96392",
                                                     balance=1000000, status=False, holds=1))
 
-    def send_request(self, user, method, json_body):
+    def send_request(self, method, json_body):
         request = self.factory.post(f'/{method.__name__}', json_body, content_type='application/json')
         response = method(request)
         json_response = json.loads(response.content.decode())
-        user.refresh_from_db()
 
         return json_response
 
@@ -42,7 +42,8 @@ class ViewsTestCase(TestCase):
     def test_status(self):
         user = self.users[3]
         body = json.dumps({"addition": {"uuid": user.uuid}})
-        json_response = self.send_request(user, status, body)
+        json_response = self.send_request(status, body)
+        user.refresh_from_db()
 
         self.assertEqual(json_response['status'], "200 OK")
         self.assertEqual(json_response['addition']['status'], user.status)
@@ -53,7 +54,8 @@ class ViewsTestCase(TestCase):
         old_balance = user.balance
         body = json.dumps({"addition": {"uuid": user.uuid,
                                         "money": money}})
-        json_response = self.send_request(user, add, body)
+        json_response = self.send_request( add, body)
+        user.refresh_from_db()
 
         self.assertEqual(json_response['status'], "200 OK")
         self.assertTrue(json_response['result'])
@@ -66,9 +68,18 @@ class ViewsTestCase(TestCase):
         old_holds = user.holds
         body = json.dumps({"addition": {"uuid": user.uuid,
                                         "money": money}})
-        json_response = self.send_request(user, subtract, body)
+        json_response = self.send_request( subtract, body)
+        user.refresh_from_db()
 
         self.assertEqual(json_response['status'], "200 OK")
         self.assertTrue(json_response['result'])
         self.assertEqual(json_response['addition']['balance'], user.balance)
         self.assertEqual(old_holds + money, user.holds)
+
+    def test_user_not_exist(self):
+        body = json.dumps({"addition": {"uuid": str(uuid.uuid4()),
+                                        "money": 200}})
+        json_response = self.send_request(add, body)
+
+        self.assertEqual(json_response['status'], "200 OK")
+        self.assertFalse(json_response['result'])
